@@ -93,14 +93,55 @@ exports.handler = (event, context, callback) => {
                     TableName: "csye6225"
                 }
 
-                dynamo.put(params, function (error, data){
-                    if(error){
-                        console.log("Error in putting item in DynamoDB ", error)
-                    } else{
-                        sendEmail(message, dataQuestion, dataAnswer);
+                if(message.type === 'DELETE'){
+
+                    let searchParams = {
+                        TableName: "csye6225",
+                        ProjectionExpression: "#qid, #aid, email_hash",
+                        FilterExpression: "#qid = :question_id AND #aid = :answer_id",
+                        ExpressionAttributeNames:{
+                            "#qid" : "question_id",
+                            "#aid" : "answer_id"
+                        },
+                        ExpressionAttributeValues: {
+                            ":question_id": newObject.question_id,
+                            ":answer_id": newObject.answer_id
+                        }
                     }
-                })
+                    console.log("Scanning Dynamo to delete records for the answer deleted....")
+                    dynamo.scan(searchParams, function (error, data){
+                        if(error){
+                            console.log("Error in scanning of DynamoDB....");
+                        } else {
+                            console.log("Scan succeeded...");
+                            data.Items.forEach(function (record){
+                                console.log(record)
+                                let deleteParams = {
+                                    TableName: "csye6225",
+                                    Key: {
+                                        email_hash: record.email_hash
+                                    }
+                                }
+                                dynamo.delete(deleteParams, function (error, data){
+                                    if(error) console.log("Error in deleting record...",error);
+                                    else console.log("Deleted record successfully....");
+                                })
+                            })
+                        }
+                    });
+                    sendEmail(message, dataQuestion, dataAnswer)
+                } else {
+                    dynamo.put(params, function (error, data) {
+                        if (error){
+                            console.log("Error in putting item in DynamoDB ", error);
+                        } 
+                        else {
+                            sendEmail(message, dataQuestion, dataAnswer);
+                        }
+                    });
+                }
             } else {
+
                 if(message.type === 'UPDATE' && !isSameAnswer){
                     let params = {
                         Key: {
@@ -114,15 +155,17 @@ exports.handler = (event, context, callback) => {
                             }
                         }
                     }
+
                     dynamo.update(params, function (error, data){
                         if(error) {
                             console.log(error)
                         } else {
-                            console.log("Updated item successfully in DynamoDB...", JSON.stringify(data))
-                            console.log("Sending email of Update...")
-                            sendEmail(message, dataQuestion, dataAnswer)
+                            console.log("Updated item successfully in DynamoDB...", JSON.stringify(data));
+                            console.log("Sending email of Update...");
+                            sendEmail(message, dataQuestion, dataAnswer);
                         }
-                    })
+                    });
+
                 } else {
                     console.log("Item already present. No email sent!");
                 }
@@ -154,22 +197,19 @@ var sendEmail = (message, dataQuestion, dataAnswer) => {
         apiTemplate = "Click here to view your Question: http://"+message.questionGetApi+"\n"+
             "Click here to view Updated Answer: http://"+message.answerGetApi+"\n"
 
-    let data = "Hello "+ message.ToAddresses.first_name +",\n"+
-        updateTemplate + message.user.first_name+".\n\n"+
+    let data = "Hello "+ message.ToAddresses.first_name +",\n\n"+
+        updateTemplate + message.user.first_name+".\n\n\n"+
         "QUESTION DETAILS\n"+
         "------------------------------------------\n"+
         "Question ID: "+dataQuestion.question_id+"\n"+
-        "Question Text: "+dataQuestion.question_text+"\n\n\n\n"+
+        "Question Text: "+dataQuestion.question_text+"\n\n\n"+
         "ANSWER DETAILS\n"+
         "------------------------------------------\n"+
         "Answer ID: "+dataAnswer.answer_id+"\n"+
         oldTemplate+"Answer Text: "+dataAnswer.answer_text+"\n"+
         newAnswerTemplate+
-        "Answered By: "+message.user.first_name+" "+message.user.last_name+"\n\n\n\n"+
-        apiTemplate+
-        "Thank you!\n\n"+
-        "NOTE: THIS IS AN AUTOMATED MAIL. PLEASE DO NOT REPLY DIRECTLY TO THIS MAIL."+
-        "IF YOU HAVE ANY COMPLAINTS OR QUESTIONS, PLEASE CONTACT US AT suthar.p@northeastern.edu"
+        "Answered By: "+message.user.first_name+" "+message.user.last_name+"\n\n\n"+
+        apiTemplate
 
     let fromMail = "no-reply@"+process.env.DOMAIN
     let emailParams = {
