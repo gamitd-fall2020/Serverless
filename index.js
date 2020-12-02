@@ -196,6 +196,9 @@ var sendEmail = (message, dataQuestion, dataAnswer) => {
     else if(message.type === "UPDATE")
         apiTemplate = "Click here to view your Question: http://"+message.questionGetApi+"\n"+
             "Click here to view Updated Answer: http://"+message.answerGetApi+"\n"
+    else 
+        apiTemplate = "Click here to view your Question: http://"+message.questionGetApi+"\n"
+
 
     let data = "Hello "+ message.ToAddresses.first_name +",\n\n"+
         updateTemplate + message.user.first_name+".\n\n\n"+
