@@ -8,6 +8,8 @@ exports.handler = (event, context, callback) => {
 
     let message = JSON.parse(event.Records[0].Sns.Message);
 
+    console.log(message);
+
     let dataQuestion = message.question;
     let dataAnswer = message.answer;
 
