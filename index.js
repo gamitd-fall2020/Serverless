@@ -45,7 +45,7 @@ exports.handler = (event, context, callback) => {
 
     dynamo.get(searchParams, function(error, retrievedRecord){
         
-        if(error){
+        if(error) {
 
             console.log("Error in DynamoDB get method ",error);
 
@@ -56,15 +56,22 @@ exports.handler = (event, context, callback) => {
             let found = false;
             let isSameAnswer = false;
             if (retrievedRecord.Item == null || retrievedRecord.Item == undefined) {
+
                 found = false;
-            }else {
+
+            } else {
+
                 if(retrievedRecord.Item.answer_text === newObject.answer_text)
                 {
-                    found = true;
                     isSameAnswer = true;
                 }
+
+                found = true;
+
             }
-            if(!found){
+
+            if(!found) {
+
                 const current = Math.floor(Date.now() / 1000)
                 let timeToLive = 60 * 60 * 24 * 10
                 const expireWithIn = timeToLive + current
@@ -87,13 +94,13 @@ exports.handler = (event, context, callback) => {
                 }
 
                 dynamo.put(params, function (error, data){
-                    if(error) console.log("Error in putting item in DynamoDB ", error)
-                    else{
-                        
+                    if(error){
+                        console.log("Error in putting item in DynamoDB ", error)
+                    } else{
                         sendEmail(message, dataQuestion, dataAnswer);
                     }
                 })
-            }else {
+            } else {
                 if(message.type === 'UPDATE' && !isSameAnswer){
                     let params = {
                         Key: {
