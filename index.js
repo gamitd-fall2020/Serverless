@@ -193,13 +193,13 @@ var sendEmail = (message, dataQuestion, dataAnswer) => {
         updateTemplate = "An answer posted to your Question was deleted By ";
 
     if(message.type === "POST")
-        apiTemplate = "Click here to view your Question: http://"+message.questionGetApi+"\n"+
-            "Click here to view Answer posted: http://"+message.answerGetApi+"\n"
+        apiTemplate = "Click here to view your Question: https://"+message.questionGetApi+"\n"+
+            "Click here to view Answer posted: https://"+message.answerGetApi+"\n"
     else if(message.type === "UPDATE")
-        apiTemplate = "Click here to view your Question: http://"+message.questionGetApi+"\n"+
-            "Click here to view Updated Answer: http://"+message.answerGetApi+"\n"
+        apiTemplate = "Click here to view your Question: https://"+message.questionGetApi+"\n"+
+            "Click here to view Updated Answer: https://"+message.answerGetApi+"\n"
     else 
-        apiTemplate = "Click here to view your Question: http://"+message.questionGetApi+"\n"
+        apiTemplate = "Click here to view your Question: https://"+message.questionGetApi+"\n"
 
 
     let data = "Hello "+ message.ToAddresses.first_name +",\n\n"+
